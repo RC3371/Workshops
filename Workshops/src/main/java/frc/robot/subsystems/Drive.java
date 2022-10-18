@@ -1,40 +1,50 @@
-package frc.subsystems;
-
-import java.util.Scanner;
+package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.*;
+
+import frc.robot.Constants;
 
 
-public abstract class Drive {
-    TalonSRX talonLF = new TalonSRX(0);
-    TalonSRX talonLB = new TalonSRX(1);
-    TalonSRX talonRF = new TalonSRX(2);
-    TalonSRX talonRB = new TalonSRX(3);
-    
-    int pidIdx = 0;
-    int timeoutMs = 0;
+public class Drive {
+    private final TalonSRX mLeftMaster;
+    private final TalonSRX mRightMaster;
+    private final TalonSRX mLeftSlave;
+    private final TalonSRX mRightSlave;
 
-    public void setTalonLB(TalonSRX talonLB) {
-        this.talonLB = talonLB;
-        talonLB.set(ControlMode.Follower, 0);
+    public Drive() {
+        mLeftMaster = new TalonSRX(Constants.kDriveLeftMasterId);
+        mLeftSlave = new TalonSRX(Constants.kDriveLeftSlaveId);
+        mLeftSlave.set(ControlMode.Follower, Constants.kDriveLeftMasterId);
+
+        mRightMaster = new TalonSRX(Constants.kDriveRightMasterId);
+        mRightSlave = new TalonSRX(Constants.kDriveRightSlaveId);
+        mRightSlave.set(ControlMode.Follower, Constants.kDriveLeftMasterId);
     }
 
-    public void setTalonRB(TalonSRX talonRB) {
-        this.talonRB = talonRB;
-        talonLB.set(ControlMode.Follower, 0);
+    public void setOpenLoop(double throttle, double turn) {
+        double right_demand = throttle + turn;
+        double left_demand = throttle - turn;
+
+        if (throttle == 0) {
+            right_demand = 0.0;
+            left_demand = 0.0;
+        }
+
+        if (Math.abs(right_demand) > 1.0 || Math.abs(left_demand) > 1.0) {
+            right_demand /= Math.max(Math.abs(right_demand), Math.abs(left_demand));
+            left_demand /= Math.max(Math.abs(right_demand), Math.abs(left_demand));
+        }
+
+        mRightMaster.set(ControlMode.PercentOutput, right_demand);
+        mLeftMaster.set(ControlMode.PercentOutput, left_demand);
     }
 
-    public void setTalonLF(TalonSRX talonLF) {
-        this.talonLF = talonLF;
-        talonLF.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative,  0, 1000);
+    public void stop() {
+        mRightMaster.set(ControlMode.PercentOutput, 0.0);
+        mLeftMaster.set(ControlMode.PercentOutput, 0.0);
     }
 
-    public void setTalonRF(TalonSRX talonRF) {
-        this.talonRF = talonRF;
-        talonRF.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative,  0, 1000);
-    }
 
     
 }

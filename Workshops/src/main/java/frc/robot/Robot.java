@@ -4,9 +4,11 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.subsystems.Drive;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -15,10 +17,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * project.
  */
 public class Robot extends TimedRobot {
-  private static final String kDefaultAuto = "Default";
-  private static final String kCustomAuto = "My Auto";
-  private String m_autoSelected;
-  private final SendableChooser<String> m_chooser = new SendableChooser<>();
+  private Drive mDrive;
+  private Joystick mThrottleStick;
+  private Joystick mTurnStick;
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -26,9 +27,10 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
-    m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
-    m_chooser.addOption("My Auto", kCustomAuto);
-    SmartDashboard.putData("Auto choices", m_chooser);
+    Joystick mThrottleStick = new Joystick(Constants.kThrottleStickPort); // id in driver station
+    Joystick mTurnStick = new Joystick(Constants.kTurnStickPort); // id in driver station
+
+    Drive mDrive = new Drive();
   }
 
   /**
@@ -53,24 +55,22 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
-    m_autoSelected = m_chooser.getSelected();
-    // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
-    System.out.println("Auto selected: " + m_autoSelected);
+    mDrive.stop();
   }
 
   /** This function is called periodically during autonomous. */
-  @Override
-  public void autonomousPeriodic() {
-    switch (m_autoSelected) {
-      case kCustomAuto:
-        // Put custom auto code here
-        break;
-      case kDefaultAuto:
-      default:
-        // Put default auto code here
-        break;
-    }
-  }
+  // @Override
+  // public void autonomousPeriodic() {
+  //   switch (m_autoSelected) {
+  //     case kCustomAuto:
+  //       // Put custom auto code here
+  //       break;
+  //     case kDefaultAuto:
+  //     default:
+  //       // Put default auto code here
+  //       break;
+  //   }
+  // }
 
   /** This function is called once when teleop is enabled. */
   @Override
@@ -78,11 +78,15 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically during operator control. */
   @Override
-  public void teleopPeriodic() {}
+  public void teleopPeriodic() {
+    mDrive.setOpenLoop(mThrottleStick.getRawAxis(1), mTurnStick.getRawAxis(0));
+  }
 
   /** This function is called once when the robot is disabled. */
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    mDrive.stop();
+  }
 
   /** This function is called periodically when disabled. */
   @Override
@@ -90,7 +94,9 @@ public class Robot extends TimedRobot {
 
   /** This function is called once when test mode is enabled. */
   @Override
-  public void testInit() {}
+  public void testInit() {
+    mDrive.stop();
+  }
 
   /** This function is called periodically during test mode. */
   @Override
